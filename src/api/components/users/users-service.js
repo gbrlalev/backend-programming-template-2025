@@ -33,3 +33,7 @@ module.exports = {
   updateUser,
   deleteUser,
 };
+
+async function loginUser(email, password) {
+  return usersRepository.loginUser(email, password);
+}

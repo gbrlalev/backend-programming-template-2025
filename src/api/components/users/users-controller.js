@@ -1,6 +1,6 @@
 const usersService = require('./users-service');
 const { errorResponder, errorTypes } = require('../../../core/errors');
-const { hashPassword } = require('../../../utils/password');
+const { hashPassword, passwordMatched } = require('../../../utils/password');
 
 async function getUsers(request, response, next) {
   try {
@@ -198,4 +198,46 @@ module.exports = {
   updateUser,
   changePassword,
   deleteUser,
+};
+
+async function loginUser(request, response, next) {
+  try {
+    const { email, password } = request.body;
+
+    const user = await usersService.getUserByEmail(email);
+    if (!user) {
+      throw errorResponder(
+        errorTypes.UNAUTHORIZED,
+        'Invalid email or password'
+      );
+    }
+
+    const isPasswordValid = await passwordMatched(password, user.password);
+    if (!isPasswordValid) {
+      throw errorResponder(
+        errorTypes.INVALID_PASSWORD,
+        'Invalid email or password'
+      );
+    }
+
+    return response.status(200).json({
+      message: 'Login successful',
+      user: {
+        email: user.email,
+        full_name: user.full_name,
+      },
+    });
+  } catch (error) {
+    return next(error);
+  }
+}
+
+module.exports = {
+  getUsers,
+  getUser,
+  createUser,
+  updateUser,
+  changePassword,
+  deleteUser,
+  loginUser,
 };
